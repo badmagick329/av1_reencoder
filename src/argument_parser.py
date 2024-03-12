@@ -4,7 +4,18 @@ import argparse
 def create_arg_parser() -> argparse.ArgumentParser:
     SHRINK_DEFAULT = 30
     PRESET_DEFAULT = 8
-    arg_parser = argparse.ArgumentParser()
+    arg_parser = argparse.ArgumentParser(
+        description="""
+    Re-encode video files to AV1 with ffmpeg. The primary use case for this
+    script is to re-encode video files with very high bitrate to a more
+    compact format. The default settings will reduce the bitrate by 30%
+
+
+    NOTE: The original file will be REMOVED. The -b flag can be used
+    to copy the original files to a backup folder. This folder will be
+    created in the same directory as the input files.
+    """
+    )
 
     arg_parser.add_argument(
         "-i",
@@ -38,7 +49,7 @@ def create_arg_parser() -> argparse.ArgumentParser:
         "--audio",
         help=(
             "Audio codec setting. "
-            "You can write any ffmpeg settings here "
+            "You can write any ffmpeg flags here "
             "and they will be inserted into the final command. default=-c:a copy"
         ),
         default="-c:a copy",
@@ -52,7 +63,24 @@ def create_arg_parser() -> argparse.ArgumentParser:
             "If this is set, a backup folder will be created "
             "and the original files will be copied there. "
         ),
+        action=argparse.BooleanOptionalAction,
         default=False,
+    )
+
+    arg_parser.add_argument(
+        "-mx",
+        "--max_video_bitrate",
+        help="Max video bitrate in Mbps. default=45. 100 is the max",
+        type=int,
+        default=45,
+    )
+
+    arg_parser.add_argument(
+        "-mn",
+        "--min_video_bitrate",
+        help="Min video bitrate in Mbps. default=1",
+        type=int,
+        default=1,
     )
 
     try:

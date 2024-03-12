@@ -1,16 +1,6 @@
-import json
+import shutil
 import subprocess
-import sys
 from pathlib import Path
-
-
-def ffprobe_json(tar: str) -> dict:
-    tar = tar.replace('"', '\\"')
-    ffmpeg_cmd = f'ffprobe -v error -show_streams -print_format json "{tar}"'
-    fout = subprocess.run(
-        ffmpeg_cmd, stdout=subprocess.PIPE, shell=True
-    ).stdout.decode("utf-8")
-    return json.loads(fout)
 
 
 def get_bitrate(file: Path) -> int:
@@ -45,10 +35,12 @@ def encode_file(
     audio: str,
     output_file: Path,
     min_bitrate: int,
+    max_bitrate: int,
+    skip_bitrate: int,
     backup_folder: Path | None,
 ):
-    file_location = file_location.resolve()
-    orig_output_file = output_file.resolve()
+    file_location = file_location.resolve().absolute()
+    orig_output_file = output_file.resolve().absolute()
     output_file = orig_output_file
     i = 0
     while output_file.exists():
@@ -63,15 +55,20 @@ def encode_file(
     print(f"Bitrate: {bitrate}")
     out_bitrate = int(bitrate - bitrate * shrink)
     print(f"Original bitrate: {bitrate}. Output bitrate: {out_bitrate}")
-    if out_bitrate < min_bitrate:
+    if out_bitrate < skip_bitrate:
         print(
-            f"Output bitrate {out_bitrate} is less than minimum bitrate {min_bitrate}. Skipping..."
+            f"Output bitrate {out_bitrate} is less than min bitrate threshold {skip_bitrate}. Skipping..."
         )
         return
 
+    if out_bitrate > max_bitrate:
+        out_bitrate = max_bitrate
+    if out_bitrate < min_bitrate:
+        out_bitrate = min_bitrate
+
     if backup_folder:
-        file_location = backup_file(file_location, backup_folder)
-        assert file_location is not None, "Backup failed"
+        copied_file = backup_file(file_location, backup_folder)
+        assert copied_file is not None, "Backup failed"
 
     cmd = [
         "ffmpeg",
@@ -91,9 +88,18 @@ def encode_file(
     ]
     print(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd)
+    if not output_file.exists():
+        return
+    file_location.unlink()
+    mp4_path = file_location.with_suffix(".mp4")
+    output_file = output_file.rename(str(mp4_path))
+    assert (
+        output_file.exists()
+    ), f"Expected output file {output_file} not found"
+    print(f"Created: {output_file}")
 
 
 def backup_file(file_location: Path, backup_folder: Path) -> Path:
     backup_location = backup_folder / file_location.name
-    subprocess.run(["cp", file_location, backup_location])
+    shutil.copy2(file_location, backup_location)
     return backup_location
