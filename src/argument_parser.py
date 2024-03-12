@@ -21,7 +21,11 @@ def create_arg_parser() -> argparse.ArgumentParser:
         "-i",
         "--input",
         nargs="+",
-        help="Input files",
+        help=(
+            "Input files or directories. Directories will not "
+            "be searched recursively. Only video files with "
+            "known extensions will be processed."
+        ),
         required=True,
     )
 
