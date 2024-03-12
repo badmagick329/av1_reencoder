@@ -37,11 +37,6 @@ def initial_setup():
     backup_folder = None
     if backup:
         backup_folder = create_backup_folder(folder_location)
-    print("\nStart")
-    print(f"Files: {paths}")
-    print(f"Shrink: {shrink}")
-    print(f"Backup folder: {backup_folder}")
-    print("End\n")
     video_exts = [
         ".mp4",
         ".mkv",
