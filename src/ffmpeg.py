@@ -1,3 +1,4 @@
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -12,13 +13,18 @@ class Ffmpeg:
         self.args = encoding_args
 
     def encode(self):
+        input_codec = self._get_codec(self.args.input_file)
+        if input_codec == "av1":
+            print(f"{self.args.input_file} is already av1 encoded")
+            return
+
         out_bitrate = self._get_output_bitrate()
         if not out_bitrate:
             return
 
         if self.args.backup_folder:
             copied_file = self._create_backup_file(
-                self.args.file_location, self.args.backup_folder
+                self.args.input_file, self.args.backup_folder
             )
             assert copied_file is not None, "Backup failed"
 
@@ -31,10 +37,28 @@ class Ffmpeg:
         print(f"Created: {final_output}")
 
     @classmethod
+    def _get_codec(cls, file: Path) -> str:
+        ffmpeg_cmd = (
+            "ffprobe -v quiet -select_streams v:0 -show_entries "
+            "stream=codec_name -of default=noprint_wrappers=1:nokey=1 "
+            f"{cls._escape_and_quote(file)}"
+        )
+        fout = subprocess.run(
+            ffmpeg_cmd, stdout=subprocess.PIPE, shell=True
+        ).stdout.decode("utf-8")
+        return fout.lower().strip()
+
+    @classmethod
+    def _escape_and_quote(cls, file: Path) -> str:
+        name = str(file).replace('"', '\\"')
+        return f'"{name}"'
+
+    @classmethod
     def _get_bitrate(cls, file: Path) -> int:
         cmd = (
-            f"ffprobe -v error -select_streams v -show_entries format=bit_rate "
-            f'-of default=noprint_wrappers=1:nokey=1 "{file}"'
+            "ffprobe -v error -select_streams v -show_entries format=bit_rate "
+            "-of default=noprint_wrappers=1:nokey=1 "
+            f"{cls._escape_and_quote(file)}"
         )
         fout = subprocess.run(
             cmd, stdout=subprocess.PIPE, shell=True
@@ -44,8 +68,9 @@ class Ffmpeg:
         except ValueError:
             pass
         cmd = (
-            f"ffprobe -v quiet -select_streams v:0 -show_entries "
-            f'stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "{file}"'
+            "ffprobe -v quiet -select_streams v:0 -show_entries "
+            "stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "
+            f"{cls._escape_and_quote(file)}"
         )
         fout = subprocess.run(
             cmd, stdout=subprocess.PIPE, shell=True
@@ -56,7 +81,7 @@ class Ffmpeg:
             raise ValueError(f"Could not get bitrate from {file}")
 
     def _get_output_bitrate(self):
-        bitrate = self._get_bitrate(self.args.file_location)
+        bitrate = self._get_bitrate(self.args.input_file)
         out_bitrate = int(bitrate - bitrate * self.args.shrink)
         if out_bitrate < self.args.skip_bitrate:
             print(
@@ -72,9 +97,10 @@ class Ffmpeg:
         return out_bitrate
 
     def _cleanup_and_rename(self) -> Path:
-        self.args.file_location.unlink()
-        mp4_path = self.args.file_location.with_suffix(".mp4")
-        output_file = self.args.output_file.rename(str(mp4_path))
+        self.args.input_file.unlink()
+        output_suffix = self.args.output_file.suffix
+        overwrite_path = self.args.input_file.with_suffix(output_suffix)
+        output_file = self.args.output_file.rename(str(overwrite_path))
         assert (
             output_file.exists()
         ), f"Expected output file {output_file} not found"
@@ -85,7 +111,7 @@ class Ffmpeg:
             "ffmpeg",
             "-y",
             "-i",
-            str(self.args.file_location),
+            str(self.args.input_file),
             "-c:v",
             "libsvtav1",
             "-b:v",
@@ -99,9 +125,7 @@ class Ffmpeg:
         ]
 
     @classmethod
-    def _create_backup_file(
-        cls, file_location: Path, backup_folder: Path
-    ) -> Path:
-        backup_location = backup_folder / file_location.name
-        shutil.copy2(file_location, backup_location)
+    def _create_backup_file(cls, file: Path, backup_folder: Path) -> Path:
+        backup_location = backup_folder / file.name
+        shutil.copy2(file, backup_location)
         return backup_location

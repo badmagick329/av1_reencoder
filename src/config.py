@@ -94,7 +94,7 @@ class Config:
         return []
 
     def _create_backup_folder(self, path: Path) -> Path:
-        backup_folder = path / "backup"
+        backup_folder = path.parent / "backup"
         backup_folder.mkdir(exist_ok=True)
         assert (
             backup_folder.exists()
@@ -104,7 +104,7 @@ class Config:
     def get_encoding_args(self) -> Iterator[EncodingArgs]:
         for file in self.input_files:
             yield EncodingArgs(
-                file_location=file,
+                input_file=file,
                 shrink=self.shrink,
                 preset=self.preset,
                 audio=self.audio,
@@ -119,10 +119,13 @@ class Config:
 
     def _get_output_file(self, file: Path) -> Path:
         orig_output_file, output_file = file, file
+        ext = self.parsed_args.extension
+        if ext.startswith("."):
+            ext = ext[1:]
         i = 0
         while output_file.exists():
             output_file = (
-                output_file.parent / f"{orig_output_file.stem}_{i}.mp4"
+                output_file.parent / f"{orig_output_file.stem}_{i}.{ext}"
             )
             i += 1
         return output_file.resolve()

@@ -3,7 +3,7 @@ from pathlib import Path
 
 @dataclass
 class EncodingArgs:
-    file_location: Path
+    input_file: Path
     shrink: float
     preset: int
     audio: str
@@ -15,7 +15,7 @@ class EncodingArgs:
 
     def __init__(
         self,
-        file_location: Path,
+        input_file: Path,
         shrink: float,
         preset: int,
         audio: str,
@@ -25,7 +25,7 @@ class EncodingArgs:
         skip_bitrate: int,
         backup_folder: Path | None,
     ):
-        self.file_location = file_location
+        self.input_file = input_file
         self.shrink = shrink
         self.preset = preset
         self.audio = audio

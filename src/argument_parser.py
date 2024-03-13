@@ -88,6 +88,13 @@ def create_arg_parser() -> ArgumentParser:
         default=1,
     )
 
+    arg_parser.add_argument(
+        "-x",
+        "--extension",
+        help="Specify output extension. default=mp4",
+        default="mp4",
+    )
+
     try:
         validate_args(arg_parser.parse_args())
     except ValueError as e:
