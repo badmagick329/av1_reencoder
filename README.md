@@ -11,19 +11,19 @@ compact format. The default settings will reduce the bitrate by 30%
 Note: The original files will be removed unless -b is specified
 
 ```sh
-python src/main.py -i ./videos
+python av1encoder.py -i ./videos
 ```
 
 ### Re-encode multiple videos and copy originals to a backup dir
 
 ```sh
-python src/main.py -b -i ./videos/video1.webm ./videos/video2.webm
+python av1encoder.py -b -i ./videos/video1.webm ./videos/video2.webm
 ```
 
 ### Reduce bitrate by 50%, backup original, do not go below 2M bitrate
 
 ```sh
-python src/main.py -i /tmp/input.webm -s 0.5 -b -mn 2
+python av1encoder.py -i /tmp/input.webm -s 0.5 -b -mn 2
 ```
 
 # Flags
