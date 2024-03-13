@@ -65,3 +65,8 @@ python src/main.py -i /tmp/input.webm -s 0.5 -b -mn 2
 -mn MIN_VIDEO_BITRATE, --min_video_bitrate MIN_VIDEO_BITRATE
     Min video bitrate in Mbps. default=1
 ```
+
+```
+-x EXTENSION, --extension EXTENSION
+    Specify output extension. default=mp4
+```
