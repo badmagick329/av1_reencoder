@@ -1,7 +1,8 @@
 import argparse
+from argparse import ArgumentParser
 
 
-def create_arg_parser() -> argparse.ArgumentParser:
+def create_arg_parser() -> ArgumentParser:
     SHRINK_DEFAULT = 30
     PRESET_DEFAULT = 8
     arg_parser = argparse.ArgumentParser(
