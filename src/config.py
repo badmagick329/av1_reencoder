@@ -108,7 +108,7 @@ class Config:
                 shrink=self.shrink,
                 preset=self.preset,
                 audio=self.audio,
-                output_file=self._get_output_file(file).with_suffix(".mp4"),
+                output_file=self._get_output_file(file),
                 min_bitrate=self.min_video_bitrate,
                 max_bitrate=self.max_video_bitrate,
                 skip_bitrate=self.SKIP_FILES_BELOW_BITRATE,
